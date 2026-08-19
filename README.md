@@ -4,6 +4,11 @@
 
 > 사용자가 입력한 영어 문장을 다각도로 분석하여 문법 오류 교정, 상황별 원어민 추천 표현, 핵심 문법 설명, 음성 지원(STT/TTS), 그리고 응용 복습 퀴즈까지 제공합니다.
 
+
+<img width="578" height="762" alt="c3" src="https://github.com/user-attachments/assets/f9655ad8-7dfe-4a2a-839a-acd27d8e2ca4" />
+<img width="546" height="767" alt="c2" src="https://github.com/user-attachments/assets/08e0cfd0-5de5-47a6-b263-c47c7ae75c15" />
+<img width="576" height="722" alt="c1" src="https://github.com/user-attachments/assets/73154f59-545f-4d76-b9ff-3246904c6d21" />
+
 ## **✨ 주요 기능 (Key Features)**
 
 * **🔍 실시간 문법 분석 & 교정**:  
