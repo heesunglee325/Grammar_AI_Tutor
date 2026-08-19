@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 영어 문법 & 표현 교정 튜터</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div id="app" class="min-h-full flex flex-col">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-brand-600 to-indigo-500 bg-clip-text text-transparent">GrammarAI Tutor</h1>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">1:1 맞춤형 영어 문법 & 표현 교정</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <!-- API Key Input Field -->
+                        <div class="relative flex items-center bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition">
+                            <i data-lucide="key" class="w-3.5 h-3.5 text-slate-400 mr-2 flex-shrink-0"></i>
+                            <input id="api-key-input" type="password" placeholder="Gemini API Key (선택)" class="bg-transparent text-xs w-28 sm:w-44 outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400" title="API Key를 입력하면 개별 키로 사용됩니다. 미입력 시 기본 구성을 이용합니다.">
+                            <button id="btn-toggle-key-visibility" class="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1 rounded transition" title="비밀번호 표시/숨기기">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <button id="btn-toggle-history" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-1.5 text-sm font-medium transition">
+                            <i data-lucide="history" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">기록 및 복습</span>
+                            <span id="history-badge" class="bg-brand-500 text-white text-xs px-1.5 py-0.5 rounded-full hidden">0</span>
+                        </button>
+
+                        <button id="btn-theme-toggle" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition" title="다크 모드 전환">
+                            <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                            <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Input and Configuration -->
+            <section class="lg:col-span-5 flex flex-col space-y-5">
+                
+                <!-- Main Input Card -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 flex flex-col space-y-4">
+                    <div class="flex items-center justify-between">
+                        <label for="input-sentence" class="font-semibold text-sm flex items-center space-x-1.5">
+                            <i data-lucide="edit-3" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                            <span>영어 문장 입력</span>
+                        </label>
+                        <span id="char-count" class="text-xs text-slate-400">0 / 500자</span>
+                    </div>
+
+                    <div class="relative">
+                        <textarea id="input-sentence" rows="4" maxlength="500" placeholder="교정받고 싶은 영어 문장을 입력하세요... (예: I went to school yesterday for learning English.)" class="w-full p-3.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition resize-none leading-relaxed"></textarea>
+                        
+                        <!-- Speech Input Button -->
+                        <button id="btn-speech-input" class="absolute right-3 bottom-3 p-2 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-lg transition" title="음성으로 입력하기">
+                            <i data-lucide="mic" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Options & Context -->
+                    <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">교정 톤 & 맥락 선택</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" data-context="casual" class="ctx-btn border-2 border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 py-1.5 px-2 text-xs rounded-lg font-medium transition text-center flex items-center justify-center space-x-1">
+                                    <i data-lucide="smile" class="w-3.5 h-3.5"></i>
+                                    <span>일상 회화</span>
+                                </button>
+                                <button type="button" data-context="business" class="ctx-btn border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-600 dark:text-slate-300 py-1.5 px-2 text-xs rounded-lg font-medium transition text-center flex items-center justify-center space-x-1">
+                                    <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
+                                    <span>비즈니스</span>
+                                </button>
+                                <button type="button" data-context="academic" class="ctx-btn border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-600 dark:text-slate-300 py-1.5 px-2 text-xs rounded-lg font-medium transition text-center flex items-center justify-center space-x-1">
+                                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                                    <span>학술/정식</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sample Prompts -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">자주 틀리는 예문 시도해보기</label>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button class="sample-btn bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs py-1 px-2.5 rounded-full transition">
+                                    I am agree with your opinion.
+                                </button>
+                                <button class="sample-btn bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs py-1 px-2.5 rounded-full transition">
+                                    He discussed about the problem yesterday.
+                                </button>
+                                <button class="sample-btn bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs py-1 px-2.5 rounded-full transition">
+                                    I am looking forward to see you soon.
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button id="btn-analyze" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-medium py-3 px-4 rounded-xl shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2 transition cursor-pointer">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>문법 분석 & 교정 받기</span>
+                    </button>
+                </div>
+
+                <!-- Learning Tip Banner -->
+                <div class="bg-indigo-50/80 dark:bg-slate-800/60 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-4 flex items-start space-x-3">
+                    <div class="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-brand-600 dark:text-brand-400 rounded-lg flex-shrink-0">
+                        <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                    </div>
+                    <div class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                        <strong class="font-semibold text-slate-800 dark:text-slate-100 block mb-0.5">튜터 활용 팁</strong>
+                        틀린 부분이 없더라도 더 자연스러운 원어민 표현이나 더 격식 있는 대체 어휘를 다양하게 배워볼 수 있습니다!
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Column: Results & Feedback -->
+            <section class="lg:col-span-7 flex flex-col">
+                
+                <!-- Empty Initial State -->
+                <div id="state-empty" class="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200/80 dark:border-slate-700/80 flex-1 flex flex-col items-center justify-center text-center space-y-4 min-h-[400px]">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500">
+                        <i data-lucide="search" class="w-8 h-8"></i>
+                    </div>
+                    <div class="max-w-xs">
+                        <h3 class="font-semibold text-base text-slate-700 dark:text-slate-200 mb-1">분석 대기 중</h3>
+                        <p class="text-xs text-slate-400">왼쪽 창에 영어 문장을 입력하시고 '문법 분석 & 교정 받기' 버튼을 누르시면 튜터의 세밀한 설명이 여기에 표시됩니다.</p>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="state-loading" class="hidden bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200/80 dark:border-slate-700/80 flex-1 flex flex-col items-center justify-center text-center space-y-4 min-h-[400px]">
+                    <div class="relative">
+                        <div class="w-14 h-14 rounded-full border-4 border-brand-200 dark:border-slate-700 border-t-brand-600 animate-spin"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-brand-600 dark:text-brand-400">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-sm text-slate-700 dark:text-slate-200 animate-pulse-subtle">AI 튜터가 문장을 세심히 정독하는 중입니다...</p>
+                        <p class="text-xs text-slate-400 mt-1">문법 오류 검사 및 원어민 뉘앙스 분석 중</p>
+                    </div>
+                </div>
+
+                <!-- Result Content Panel -->
+                <div id="state-result" class="hidden flex-1 space-y-5">
+                    
+                    <!-- Main Correction Cards -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700/60">
+                            <div class="flex items-center space-x-2">
+                                <span id="status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                    정확함
+                                </span>
+                                <span id="res-context-tag" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                    일상 회화
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button id="btn-save-item" class="p-1.5 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="북마크 저장">
+                                    <i data-lucide="bookmark" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sentences Comparison Grid -->
+                        <div class="space-y-3">
+                            <!-- Original Sentence -->
+                            <div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl">
+                                <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+                                    <span>내가 쓴 문장 (Original)</span>
+                                    <button class="btn-tts hover:text-brand-600 text-slate-400" data-text-type="original" title="발음 듣기">
+                                        <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                                <p id="res-original" class="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                            </div>
+
+                            <!-- Grammar Corrected Sentence -->
+                            <div class="p-3 bg-indigo-50/50 dark:bg-brand-950/20 rounded-xl border border-indigo-100/60 dark:border-brand-900/30">
+                                <div class="text-xs font-semibold text-brand-600 dark:text-brand-400 mb-1 flex items-center justify-between">
+                                    <span class="flex items-center space-x-1">
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                        <span>문법 수정 문장 (Grammar Correction)</span>
+                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="btn-copy text-xs text-brand-600 hover:text-brand-800 flex items-center space-x-0.5" data-text-id="res-corrected">
+                                            <i data-lucide="copy" class="w-3 h-3"></i>
+                                            <span>복사</span>
+                                        </button>
+                                        <button class="btn-tts hover:text-brand-600 text-brand-500" data-text-type="corrected" title="발음 듣기">
+                                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p id="res-corrected" class="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-relaxed"></p>
+                            </div>
+
+                            <!-- Native Natural Phrasing -->
+                            <div class="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100/60 dark:border-emerald-900/30">
+                                <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1 flex items-center justify-between">
+                                    <span class="flex items-center space-x-1">
+                                        <i data-lucide="sparkle" class="w-3.5 h-3.5"></i>
+                                        <span>원어민이 자주 쓰는 자연스러운 표현 (Native Standard)</span>
+                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="btn-copy text-xs text-emerald-600 hover:text-emerald-800 flex items-center space-x-0.5" data-text-id="res-natural">
+                                            <i data-lucide="copy" class="w-3 h-3"></i>
+                                            <span>복사</span>
+                                        </button>
+                                        <button class="btn-tts hover:text-emerald-600 text-emerald-500" data-text-type="natural" title="발음 듣기">
+                                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p id="res-natural" class="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grammar Error Breakdown -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                        <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i>
+                            <span>문법 교정 및 고칠 점 상세 설명</span>
+                        </h4>
+                        <div id="res-errors-container" class="space-y-2.5">
+                            <!-- Dynamic error list items -->
+                        </div>
+                    </div>
+
+                    <!-- Key Grammar Concepts -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                        <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                            <i data-lucide="book-marked" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                            <span>핵심 문법 포인트 정리</span>
+                        </h4>
+                        <div id="res-grammar-points" class="space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                            <!-- Dynamic key points -->
+                        </div>
+                    </div>
+
+                    <!-- Native Speaking Tips -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                        <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                            <i data-lucide="message-square" class="w-4 h-4 text-indigo-500"></i>
+                            <span>원어민 스피킹 꿀팁 & 뉘앙스 차이</span>
+                        </h4>
+                        <p id="res-native-tips" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-line"></p>
+                    </div>
+
+                    <!-- Interactive Practice Quiz Card -->
+                    <div class="bg-gradient-to-br from-brand-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl p-5 border border-brand-100 dark:border-slate-700 space-y-3">
+                        <h4 class="font-bold text-sm text-brand-900 dark:text-brand-200 flex items-center space-x-2">
+                            <i data-lucide="help-circle" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                            <span>오늘 바로 복습하는 응용 빈칸 퀴즈</span>
+                        </h4>
+                        <div id="quiz-container" class="space-y-3">
+                            <!-- Dynamic Practice Questions -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+        </main>
+
+        <!-- History Drawer Modal -->
+        <div id="modal-history" class="fixed inset-0 z-50 flex justify-end bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="w-full max-w-md bg-white dark:bg-slate-800 h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 custom-scrollbar">
+                
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="history" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                        <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">학습 기록 & 복습 보관함</h3>
+                    </div>
+                    <button id="btn-close-history" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                    <span id="history-count-text" class="text-slate-500">저장된 문장 0개</span>
+                    <button id="btn-clear-history" class="text-red-500 hover:underline">전체 삭제</button>
+                </div>
+
+                <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                    <!-- Dynamic saved history cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center space-x-2">
+            <i data-lucide="check" class="w-4 h-4 text-emerald-400 dark:text-emerald-600"></i>
+            <span id="toast-message">메시지</span>
+        </div>
+
+    </div>
+
+    <script>
+        // Global App State
+        const state = {
+            selectedContext: 'casual',
+            currentResult: null,
+            history: JSON.parse(localStorage.getItem('grammar_tutor_history') || '[]'),
+            isRecording: false,
+            speechRecognition: null
+        };
+
+        // Initialize Lucide Icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initApp();
+        });
+
+        function initApp() {
+            // Textarea character counter
+            const textarea = document.getElementById('input-sentence');
+            const charCount = document.getElementById('char-count');
+            textarea.addEventListener('input', () => {
+                charCount.textContent = `${textarea.value.length} / 500자`;
+            });
+
+            // Context selection buttons
+            const ctxBtns = document.querySelectorAll('.ctx-btn');
+            ctxBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    ctxBtns.forEach(b => {
+                        b.classList.remove('border-2', 'border-brand-500', 'bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-700', 'dark:text-brand-300');
+                        b.classList.add('border', 'border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300');
+                    });
+                    btn.classList.remove('border', 'border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300');
+                    btn.classList.add('border-2', 'border-brand-500', 'bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-700', 'dark:text-brand-300');
+                    state.selectedContext = btn.dataset.context;
+                });
+            });
+
+            // Sample prompt buttons
+            document.querySelectorAll('.sample-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    textarea.value = btn.textContent.trim();
+                    textarea.dispatchEvent(new Event('input'));
+                });
+            });
+
+            // Theme Toggle
+            document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+            });
+
+            // API Key LocalStorage Persistence & Visibility Toggle
+            const apiKeyInput = document.getElementById('api-key-input');
+            const savedApiKey = localStorage.getItem('gemini_api_key') || '';
+            if (apiKeyInput) {
+                apiKeyInput.value = savedApiKey;
+                apiKeyInput.addEventListener('input', () => {
+                    localStorage.setItem('gemini_api_key', apiKeyInput.value.trim());
+                });
+            }
+
+            const btnToggleKeyVis = document.getElementById('btn-toggle-key-visibility');
+            if (btnToggleKeyVis && apiKeyInput) {
+                btnToggleKeyVis.addEventListener('click', () => {
+                    const isPassword = apiKeyInput.type === 'password';
+                    apiKeyInput.type = isPassword ? 'text' : 'password';
+                    btnToggleKeyVis.innerHTML = isPassword 
+                        ? `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>` 
+                        : `<i data-lucide="eye" class="w-3.5 h-3.5"></i>`;
+                    lucide.createIcons();
+                });
+            }
+
+            // Speech Recognition Setup (STT)
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                state.speechRecognition = new SpeechRecognition();
+                state.speechRecognition.lang = 'en-US';
+                state.speechRecognition.interimResults = false;
+
+                const micBtn = document.getElementById('btn-speech-input');
+                micBtn.addEventListener('click', () => {
+                    if (!state.isRecording) {
+                        state.speechRecognition.start();
+                        state.isRecording = true;
+                        micBtn.classList.add('text-red-500', 'animate-pulse');
+                        showToast('음성을 듣고 있습니다. 영어로 말해주세요...');
+                    } else {
+                        state.speechRecognition.stop();
+                        state.isRecording = false;
+                        micBtn.classList.remove('text-red-500', 'animate-pulse');
+                    }
+                });
+
+                state.speechRecognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    textarea.value = transcript;
+                    textarea.dispatchEvent(new Event('input'));
+                    state.isRecording = false;
+                    micBtn.classList.remove('text-red-500', 'animate-pulse');
+                    showToast('음성이 입력되었습니다!');
+                };
+
+                state.speechRecognition.onerror = () => {
+                    state.isRecording = false;
+                    micBtn.classList.remove('text-red-500', 'animate-pulse');
+                    showToast('음성 인식 중 오류가 발생했습니다.');
+                };
+            }
+
+            // Analyze Button Click
+            document.getElementById('btn-analyze').addEventListener('click', handleAnalyze);
+
+            // History Modal Toggles
+            const historyModal = document.getElementById('modal-history');
+            const btnToggleHistory = document.getElementById('btn-toggle-history');
+            const btnCloseHistory = document.getElementById('btn-close-history');
+
+            btnToggleHistory.addEventListener('click', openHistoryModal);
+            btnCloseHistory.addEventListener('click', closeHistoryModal);
+            historyModal.addEventListener('click', (e) => {
+                if (e.target === historyModal) closeHistoryModal();
+            });
+
+            document.getElementById('btn-clear-history').addEventListener('click', () => {
+                state.history = [];
+                saveHistory();
+                renderHistoryList();
+                updateHistoryBadge();
+                showToast('기록이 전체 삭제되었습니다.');
+            });
+
+            // Save bookmark button in result
+            document.getElementById('btn-save-item').addEventListener('click', toggleSaveCurrent);
+
+            // Copy buttons delegation
+            document.addEventListener('click', (e) => {
+                const copyBtn = e.target.closest('.btn-copy');
+                if (copyBtn) {
+                    const targetId = copyBtn.dataset.textId;
+                    const text = document.getElementById(targetId)?.textContent;
+                    if (text) {
+                        copyToClipboard(text);
+                        showToast('문장이 클립보드에 복사되었습니다!');
+                    }
+                }
+
+                const ttsBtn = e.target.closest('.btn-tts');
+                if (ttsBtn) {
+                    const textType = ttsBtn.dataset.textType;
+                    let speakText = '';
+                    if (textType === 'original') speakText = document.getElementById('res-original').textContent;
+                    if (textType === 'corrected') speakText = document.getElementById('res-corrected').textContent;
+                    if (textType === 'natural') speakText = document.getElementById('res-natural').textContent;
+                    if (speakText) speakSentence(speakText);
+                }
+            });
+
+            updateHistoryBadge();
+        }
+
+        async function handleAnalyze() {
+            const input = document.getElementById('input-sentence').value.trim();
+            if (!input) {
+                showToast('분석할 영어 문장을 먼저 입력해 주세요.');
+                return;
+            }
+
+            // Switch to Loading State
+            document.getElementById('state-empty').classList.add('hidden');
+            document.getElementById('state-result').classList.add('hidden');
+            document.getElementById('state-loading').classList.remove('hidden');
+
+            const contextMap = {
+                casual: '일상 대화 (Casual Conversation)',
+                business: '비즈니스 및 전문 이메일 (Business & Formal)',
+                academic: '학술적 글쓰기 (Academic & Formal)'
+            };
+
+            const systemPrompt = `당신은 세계 최고 수준의 한국어-영어 1:1 문법 및 표현 전담 튜터입니다.
+사용자가 입력한 영어 문장을 다각도로 분석하여 교정하고 설명해야 합니다.
+반드시 제공된 JSON 구조에 맞추어 한국어로 친절하고 명확하게 답변해 주세요.`;
+
+            const userPrompt = `입력 문장: "${input}"
+선택된 상황/맥락: ${contextMap[state.selectedContext]}
+
+위 문장을 분석하여 다음 요구사항을 충족해 주세요:
+1. isCorrect: 문법적으로나 맥락상 완벽하게 자연스러우면 true, 수정이 필요하면 false.
+2. corrected: 문법 오류를 올바르게 수정한 문장.
+3. natural: 해당 상황(${contextMap[state.selectedContext]})에서 원어민이 가장 즐겨 쓸 만한 자연스럽고 유려한 문장.
+4. grammarErrors: 원문의 어색한 점이나 문법적 문제점을 개별 단위로 설명 (원문 조각, 수정 조각, 상세 이유, 문법 종류).
+5. keyGrammarPoints: 해당 문장에서 학습자가 꼭 알아야 할 핵심 문법 개념 2~3가지 정리.
+6. nativeTips: 어휘 뉘앙스 차이나 스피킹 팁 제공.
+7. practiceQuestions: 방금 배운 문법이나 어휘를 응용할 수 있는 빈칸 퀴즈 예문 2개 (sentence에 빈칸 ___ 포함, answer는 정답 단어, hint는 한국어 힌트).`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            isCorrect: { type: "BOOLEAN" },
+                            corrected: { type: "STRING" },
+                            natural: { type: "STRING" },
+                            grammarErrors: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        originalSegment: { type: "STRING" },
+                                        correctedSegment: { type: "STRING" },
+                                        explanation: { type: "STRING" },
+                                        grammarType: { type: "STRING" }
+                                    },
+                                    required: ["originalSegment", "correctedSegment", "explanation", "grammarType"]
+                                }
+                            },
+                            keyGrammarPoints: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        title: { type: "STRING" },
+                                        description: { type: "STRING" }
+                                    },
+                                    required: ["title", "description"]
+                                }
+                            },
+                            nativeTips: { type: "STRING" },
+                            practiceQuestions: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        sentence: { type: "STRING" },
+                                        answer: { type: "STRING" },
+                                        hint: { type: "STRING" }
+                                    },
+                                    required: ["sentence", "answer", "hint"]
+                                }
+                            }
+                        },
+                        required: ["isCorrect", "corrected", "natural", "grammarErrors", "keyGrammarPoints", "nativeTips", "practiceQuestions"]
+                    }
+                }
+            };
+
+            const userApiKey = document.getElementById('api-key-input')?.value.trim() || "";
+            const apiKey = userApiKey;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!jsonText) {
+                    throw new Error('응답 데이터를 받아오지 못했습니다.');
+                }
+
+                const parsedData = JSON.parse(jsonText);
+                parsedData.original = input;
+                parsedData.context = state.selectedContext;
+                parsedData.id = Date.now().toString();
+
+                state.currentResult = parsedData;
+                renderAnalysisResult(parsedData);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('state-loading').classList.add('hidden');
+                document.getElementById('state-empty').classList.remove('hidden');
+                showToast('분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            }
+        }
+
+        async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response;
+            } catch (err) {
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, backoff));
+                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
+                }
+                throw err;
+            }
+        }
+
+        function renderAnalysisResult(data) {
+            document.getElementById('state-loading').classList.add('hidden');
+            document.getElementById('state-result').classList.remove('hidden');
+
+            // Status Badge
+            const statusBadge = document.getElementById('status-badge');
+            if (data.isCorrect) {
+                statusBadge.textContent = '문법 완벽함';
+                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
+            } else {
+                statusBadge.textContent = '교정 필요';
+                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+            }
+
+            // Context Tag
+            const contextText = {
+                casual: '일상 회화',
+                business: '비즈니스',
+                academic: '학술/정식'
+            }[data.context] || '기본';
+            document.getElementById('res-context-tag').textContent = contextText;
+
+            // Sentences
+            document.getElementById('res-original').textContent = data.original;
+            document.getElementById('res-corrected').textContent = data.corrected;
+            document.getElementById('res-natural').textContent = data.natural;
+
+            // Save Bookmark Button UI
+            const isSaved = state.history.some(item => item.id === data.id);
+            updateBookmarkIcon(isSaved);
+
+            // Render Error Breakdown
+            const errorsContainer = document.getElementById('res-errors-container');
+            errorsContainer.innerHTML = '';
+            if (!data.grammarErrors || data.grammarErrors.length === 0) {
+                errorsContainer.innerHTML = `<div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl text-xs text-slate-500">문법적인 오류가 발견되지 않았습니다. 원어민식 자연스러운 표현 추천을 참고해보세요!</div>`;
+            } else {
+                data.grammarErrors.forEach(err => {
+                    const card = document.createElement('div');
+                    card.className = 'p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-900/30 space-y-1.5';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-xs">
+                                <span class="px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium">${escapeHtml(err.originalSegment || '원문')}</span>
+                                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-400"></i>
+                                <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium">${escapeHtml(err.correctedSegment || '수정')}</span>
+                            </div>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${escapeHtml(err.grammarType || '문법')}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">${escapeHtml(err.explanation)}</p>
+                    `;
+                    errorsContainer.appendChild(card);
+                });
+            }
+
+            // Render Key Grammar Points
+            const pointsContainer = document.getElementById('res-grammar-points');
+            pointsContainer.innerHTML = '';
+            if (data.keyGrammarPoints && data.keyGrammarPoints.length > 0) {
+                data.keyGrammarPoints.forEach(pt => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2.5 rounded-lg bg-indigo-50/30 dark:bg-indigo-950/10 border-l-2 border-brand-500';
+                    item.innerHTML = `
+                        <strong class="font-semibold text-slate-800 dark:text-slate-200 block mb-0.5">${escapeHtml(pt.title)}</strong>
+                        <p class="text-slate-600 dark:text-slate-300">${escapeHtml(pt.description)}</p>
+                    `;
+                    pointsContainer.appendChild(item);
+                });
+            }
+
+            // Native Tips
+            document.getElementById('res-native-tips').textContent = data.nativeTips || '특이사항 없음';
+
+            // Practice Quiz Section
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.innerHTML = '';
+            if (data.practiceQuestions && data.practiceQuestions.length > 0) {
+                data.practiceQuestions.forEach((q, idx) => {
+                    const qBox = document.createElement('div');
+                    qBox.className = 'bg-white dark:bg-slate-800 p-3 rounded-xl border border-brand-100 dark:border-slate-700 space-y-2';
+                    qBox.innerHTML = `
+                        <div class="text-xs font-medium text-slate-700 dark:text-slate-200">
+                            Q${idx + 1}. ${escapeHtml(q.sentence)}
+                            <span class="text-slate-400 font-normal ml-1">(${escapeHtml(q.hint)})</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" class="quiz-input text-xs p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 w-36 outline-none focus:ring-1 focus:ring-brand-500" placeholder="정답 입력...">
+                            <button class="btn-check-quiz text-xs bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg transition" data-ans="${escapeHtml(q.answer)}">확인</button>
+                            <span class="quiz-feedback text-xs font-medium"></span>
+                        </div>
+                    `;
+                    quizContainer.appendChild(qBox);
+                });
+
+                // Attach quiz check listeners
+                quizContainer.querySelectorAll('.btn-check-quiz').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const parent = e.target.closest('div');
+                        const input = parent.querySelector('.quiz-input').value.trim();
+                        const correctAns = e.target.dataset.ans.trim();
+                        const feedback = parent.querySelector('.quiz-feedback');
+
+                        if (input.toLowerCase() === correctAns.toLowerCase()) {
+                            feedback.textContent = ' 정답입니다! 👏';
+                            feedback.className = 'quiz-feedback text-xs font-semibold text-emerald-600 dark:text-emerald-400';
+                        } else {
+                            feedback.textContent = ` ❌ 정답: ${correctAns}`;
+                            feedback.className = 'quiz-feedback text-xs font-semibold text-red-500';
+                        }
+                    });
+                });
+            }
+
+            lucide.createIcons();
+            // Scroll smooth into result
+            document.getElementById('state-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function toggleSaveCurrent() {
+            if (!state.currentResult) return;
+            const index = state.history.findIndex(item => item.id === state.currentResult.id);
+            if (index >= 0) {
+                state.history.splice(index, 1);
+                updateBookmarkIcon(false);
+                showToast('보관함에서 삭제되었습니다.');
+            } else {
+                state.history.unshift(state.currentResult);
+                updateBookmarkIcon(true);
+                showToast('학습 보관함에 저장되었습니다!');
+            }
+            saveHistory();
+            updateHistoryBadge();
+        }
+
+        function updateBookmarkIcon(isSaved) {
+            const saveBtn = document.getElementById('btn-save-item');
+            if (isSaved) {
+                saveBtn.innerHTML = `<i data-lucide="bookmark-check" class="w-4 h-4 text-brand-600 fill-brand-600"></i>`;
+            } else {
+                saveBtn.innerHTML = `<i data-lucide="bookmark" class="w-4 h-4"></i>`;
+            }
+            lucide.createIcons();
+        }
+
+        function saveHistory() {
+            localStorage.setItem('grammar_tutor_history', JSON.stringify(state.history));
+        }
+
+        function updateHistoryBadge() {
+            const badge = document.getElementById('history-badge');
+            if (state.history.length > 0) {
+                badge.textContent = state.history.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+            document.getElementById('history-count-text').textContent = `저장된 문장 ${state.history.length}개`;
+        }
+
+        function openHistoryModal() {
+            renderHistoryList();
+            const modal = document.getElementById('modal-history');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('translate-x-full');
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('modal-history');
+            modal.querySelector('div').classList.add('translate-x-full');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('history-list');
+            container.innerHTML = '';
+
+            if (state.history.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 text-xs">
+                        <i data-lucide="bookmark" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+                        저장된 문장이 없습니다.<br>교정 결과의 북마크 아이콘을 눌러 저장해보세요!
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            state.history.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-2 cursor-pointer hover:border-brand-500 transition';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between text-[11px] text-slate-400">
+                        <span>${new Date(Number(item.id)).toLocaleDateString('ko-KR')}</span>
+                        <button class="btn-del-history hover:text-red-500 p-1" data-id="${item.id}" title="삭제">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="text-xs">
+                        <p class="line-through text-slate-400 font-normal">${escapeHtml(item.original)}</p>
+                        <p class="font-semibold text-brand-600 dark:text-brand-400 mt-0.5">${escapeHtml(item.corrected)}</p>
+                    </div>
+                `;
+
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-del-history')) return;
+                    state.currentResult = item;
+                    renderAnalysisResult(item);
+                    closeHistoryModal();
+                });
+
+                card.querySelector('.btn-del-history').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    state.history = state.history.filter(h => h.id !== item.id);
+                    saveHistory();
+                    renderHistoryList();
+                    updateHistoryBadge();
+                    if (state.currentResult && state.currentResult.id === item.id) {
+                        updateBookmarkIcon(false);
+                    }
+                });
+
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function speakSentence(text) {
+            if (!('speechSynthesis' in window)) {
+                showToast('이 브라우저는 음성 재생(TTS)을 지원하지 않습니다.');
+                return;
+            }
+            window.speechSynthesis.cancel(); // Clear queue
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9; // Slightly calm speed for clarity
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
